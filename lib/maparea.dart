@@ -86,7 +86,7 @@ class MapAreaState extends State<MapArea> {
 
   late MapboxMapController mapController;
   late Position currentPosition;
-  // late TextEditingController _textEditingController;
+  late TextEditingController _textEditingController;
   late final PlacesSearch _searchApi;
   final TextEditingController _searchController = TextEditingController();
   List<MapBoxPlace> _places = [];
