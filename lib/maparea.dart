@@ -704,10 +704,35 @@ class MapAreaState extends State<MapArea> {
 //   void setState(Null Function() param0) {}
 // }
 
-class filter_page extends StatelessWidget {
-  const filter_page({
-    super.key,
-  });
+class filter_page extends StatefulWidget {
+  const filter_page({Key? key}) : super(key: key);
+
+  @override
+  State<filter_page> createState() => _filter_pageState();
+}
+
+class _filter_pageState extends State<filter_page> {
+  String selectedDistance = '';
+  String selectedConnectionType = '';
+  String selectedVehicleType = '';
+
+  void selectDistance(String distance) {
+    setState(() {
+      selectedDistance = distance;
+    });
+  }
+
+  void selectConnectionType(String connectionType) {
+    setState(() {
+      selectedConnectionType = connectionType;
+    });
+  }
+
+  void selectVehicleType(String vehicleType) {
+    setState(() {
+      selectedVehicleType = vehicleType;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -746,15 +771,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedDistance == '500M'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('500M'),
+                              onPressed: () {
+                                selectDistance('500M');
+                              },
+                              child: Text(
+                                '500M',
+                                style: TextStyle(
+                                  color: selectedDistance == '500M'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -764,15 +800,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedDistance == '1KM'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('1KM'),
+                              onPressed: () {
+                                selectDistance('1KM');
+                              },
+                              child: Text(
+                                '1KM',
+                                style: TextStyle(
+                                  color: selectedDistance == '1KM'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -782,15 +829,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedDistance == '2KM'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('2KM'),
+                              onPressed: () {
+                                selectDistance('2KM');
+                              },
+                              child: Text(
+                                '2KM',
+                                style: TextStyle(
+                                  color: selectedDistance == '2KM'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -800,15 +858,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedDistance == '5KM'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('5KM'),
+                              onPressed: () {
+                                selectDistance('5KM');
+                              },
+                              child: Text(
+                                '5KM',
+                                style: TextStyle(
+                                  color: selectedDistance == '5KM'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -843,15 +912,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedConnectionType == 'CCS'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('CCS'),
+                              onPressed: () {
+                                selectConnectionType('CCS');
+                              },
+                              child: Text(
+                                'CCS',
+                                style: TextStyle(
+                                  color: selectedConnectionType == 'CCS'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -861,15 +941,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedConnectionType == 'CCS2'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('CCS2'),
+                              onPressed: () {
+                                selectConnectionType('CCS2');
+                              },
+                              child: Text(
+                                'CCS2',
+                                style: TextStyle(
+                                  color: selectedConnectionType == 'CCS2'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -879,15 +970,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedConnectionType == 'Type2'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('Type2'),
+                              onPressed: () {
+                                selectConnectionType('Type2');
+                              },
+                              child: Text(
+                                'Type2',
+                                style: TextStyle(
+                                  color: selectedConnectionType == 'Type2'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -897,15 +999,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedConnectionType == 'Chademo'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('Chademo'),
+                              onPressed: () {
+                                selectConnectionType('Chademo');
+                              },
+                              child: Text(
+                                'Chademo',
+                                style: TextStyle(
+                                  color: selectedConnectionType == 'Chademo'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -940,15 +1053,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedVehicleType == '2 wheeler'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('2 wheeler'),
+                              onPressed: () {
+                                selectVehicleType('2 wheeler');
+                              },
+                              child: Text(
+                                '2 wheeler',
+                                style: TextStyle(
+                                  color: selectedVehicleType == '2 wheeler'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -958,15 +1082,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedVehicleType == '3 wheeler'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('3 wheeler'),
+                              onPressed: () {
+                                selectVehicleType('3 wheeler');
+                              },
+                              child: Text(
+                                '3 wheeler',
+                                style: TextStyle(
+                                  color: selectedVehicleType == '3 wheeler'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
@@ -976,15 +1111,26 @@ class filter_page extends StatelessWidget {
                             height: 40,
                             decoration: BoxDecoration(
                               border: Border.all(
-                                color: Colors.grey.shade300,
+                                color: selectedVehicleType == '4 wheeler'
+                                    ? Colors.blue
+                                    : Colors.grey.shade300,
                                 style: BorderStyle.solid,
                                 width: 2,
                               ),
                               borderRadius: BorderRadius.circular(5),
                             ),
                             child: TextButton(
-                              onPressed: null,
-                              child: Text('4 wheeler'),
+                              onPressed: () {
+                                selectVehicleType('4 wheeler');
+                              },
+                              child: Text(
+                                '4 wheeler',
+                                style: TextStyle(
+                                  color: selectedVehicleType == '4 wheeler'
+                                      ? Colors.blue
+                                      : Colors.grey.shade300,
+                                ),
+                              ),
                             ),
                           ),
                           SizedBox(
