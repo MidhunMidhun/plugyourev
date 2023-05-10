@@ -11,43 +11,10 @@ class MapBoxSearchScreen extends StatefulWidget {
 
 class _MapBoxSearchScreenState extends State<MapBoxSearchScreen> {
   List<String> _placesList = [];
-  //search places
 
-  String MAPBOX_ACCESS_TOKEN =
-      'pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ';
-
-  String baseUrl = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
-  String searchType = 'place%2Cpostcode%2Caddress';
-  String searchResultsLimit = '5';
-  String proximity = 'ip';
-  String country = 'in';
-
-  Dio _dio = Dio();
   final TextEditingController _textEditingController = TextEditingController();
 
   List<MapBoxPlace> searchResults = [];
-  Future getSearchResultsFromQueryUsingMapbox(String searchtext) async {
-    String url =
-        '$baseUrl/$searchtext.json?&proximity=$proximity&access_token=$MAPBOX_ACCESS_TOKEN';
-    url = Uri.parse(url).toString();
-    // String url =
-    //     '$baseUrl/$searchtext.json?country=$country&limit=$searchResultsLimit&proximity=$proximity&types=$searchType&access_token=$MAPBOX_ACCESS_TOKEN';
-    // url = Uri.parse(url).toString();
-    print(url);
-    try {
-      _dio.options.contentType = Headers.jsonContentType;
-      final responseData = await _dio.get(url);
-      setState(() {
-        _placesList.add(responseData.data['features'][0]['place_name']);
-      });
-      print(responseData.data['features'][0]['place_name']);
-      return responseData.data;
-    } catch (e) {
-      var DioExceptions;
-      final errorMessage = DioExceptions.fromDioError(e as DioError).toString();
-      debugPrint(errorMessage);
-    }
-  }
 
   Future<void> getPlaces(String searchQ) async {
     PlacesSearch placesSearch = PlacesSearch(
@@ -81,13 +48,10 @@ class _MapBoxSearchScreenState extends State<MapBoxSearchScreen> {
                 onChanged: (v) {
                   getPlaces(v);
                 },
-                //onTap: _search,
                 backgroundColor: Colors.white,
                 borderRadius: BorderRadius.circular(10.0),
                 placeholder: 'Search',
               ),
-
-              // autoCompleteWidget,
             ),
           ],
         ),

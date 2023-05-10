@@ -5,6 +5,9 @@ import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:plugyourev/bottom_navbar.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
+import 'auth.dart';
+import 'login_page.dart';
+
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
 
@@ -20,6 +23,9 @@ class _ProfilePageState extends State<ProfilePage> {
   //   setState(() {
   //     _currentIndex = index;
   //   });
+  void signOutUser() async {
+    await AuthMethods().signOut();
+  }
   // }
 
   @override
@@ -106,7 +112,11 @@ class _ProfilePageState extends State<ProfilePage> {
           ProfileMenu(
             icon: Icons.logout_outlined,
             text: 'Log Out',
-            press: () {},
+            press: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                  builder: (BuildContext context) => MyLogin()));
+              signOutUser();
+            },
           ),
         ],
       ),

@@ -1,4 +1,8 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+
+import 'auth.dart';
+import 'login_page.dart';
 
 class MyRegister extends StatefulWidget {
   const MyRegister({Key? key}) : super(key: key);
@@ -8,6 +12,37 @@ class MyRegister extends StatefulWidget {
 }
 
 class _MyRegisterState extends State<MyRegister> {
+  final TextEditingController _emailcontroller = TextEditingController();
+  final TextEditingController _namecontroller = TextEditingController();
+  final TextEditingController _passwordcontroller = TextEditingController();
+  final TextEditingController _confirmpasscontroller = TextEditingController();
+
+  //check password
+  bool passwordcheck() {
+    if (_passwordcontroller.text.trim() == _confirmpasscontroller.text.trim()) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  Future signUp() async {
+    if (passwordcheck()) {
+      UserCredential credentials = await FirebaseAuth.instance
+          .createUserWithEmailAndPassword(
+              email: _emailcontroller.text.trim(),
+              password: _passwordcontroller.text.trim());
+    }
+  }
+
+  @override
+  void dispose() {
+    _emailcontroller.dispose();
+    _passwordcontroller.dispose();
+    _confirmpasscontroller.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -24,7 +59,7 @@ class _MyRegisterState extends State<MyRegister> {
         body: Stack(
           children: [
             Container(
-              padding: EdgeInsets.only(left: 35, top: 30),
+              padding: EdgeInsets.only(left: 35, top: 10),
               child: Text(
                 'Create\nAccount',
                 style: TextStyle(color: Colors.black, fontSize: 33),
@@ -33,7 +68,7 @@ class _MyRegisterState extends State<MyRegister> {
             SingleChildScrollView(
               child: Container(
                 padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).size.height * 0.28),
+                    top: MediaQuery.of(context).size.height * 0.23),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -42,6 +77,7 @@ class _MyRegisterState extends State<MyRegister> {
                       child: Column(
                         children: [
                           TextField(
+                            controller: _namecontroller,
                             style: TextStyle(color: Colors.black),
                             decoration: InputDecoration(
                                 enabledBorder: OutlineInputBorder(
@@ -63,9 +99,10 @@ class _MyRegisterState extends State<MyRegister> {
                                 )),
                           ),
                           SizedBox(
-                            height: 30,
+                            height: 25,
                           ),
                           TextField(
+                            controller: _emailcontroller,
                             style: TextStyle(color: Colors.black),
                             decoration: InputDecoration(
                                 enabledBorder: OutlineInputBorder(
@@ -87,9 +124,10 @@ class _MyRegisterState extends State<MyRegister> {
                                 )),
                           ),
                           SizedBox(
-                            height: 30,
+                            height: 25,
                           ),
                           TextField(
+                            controller: _passwordcontroller,
                             style: TextStyle(color: Colors.black),
                             obscureText: true,
                             decoration: InputDecoration(
@@ -106,6 +144,32 @@ class _MyRegisterState extends State<MyRegister> {
                                   ),
                                 ),
                                 hintText: "Password",
+                                hintStyle: TextStyle(color: Colors.black),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                )),
+                          ),
+                          SizedBox(
+                            height: 25,
+                          ),
+                          TextField(
+                            controller: _confirmpasscontroller,
+                            style: TextStyle(color: Colors.black),
+                            obscureText: true,
+                            decoration: InputDecoration(
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                  borderSide: BorderSide(
+                                    color: Colors.black,
+                                  ),
+                                ),
+                                hintText: "Confirm Password",
                                 hintStyle: TextStyle(color: Colors.black),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(10),
@@ -129,7 +193,18 @@ class _MyRegisterState extends State<MyRegister> {
                                 backgroundColor: Color(0xff4c505b),
                                 child: IconButton(
                                     color: Colors.white,
-                                    onPressed: () {},
+                                    onPressed: () {
+                                      AuthMethods().signupUser(
+                                        email: _emailcontroller.text.trim(),
+                                        password:
+                                            _passwordcontroller.text.trim(),
+                                        name: _namecontroller.text.trim(),
+                                      );
+
+                                      Navigator.of(context).pushReplacement(
+                                          MaterialPageRoute(
+                                              builder: (_) => MyLogin()));
+                                    },
                                     icon: Icon(
                                       Icons.arrow_forward,
                                     )),
@@ -137,7 +212,7 @@ class _MyRegisterState extends State<MyRegister> {
                             ],
                           ),
                           SizedBox(
-                            height: 40,
+                            height: 10,
                           ),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,

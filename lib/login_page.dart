@@ -1,6 +1,9 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:plugyourev/bottom_navbar.dart';
 import 'package:plugyourev/maparea.dart';
+
+import 'auth.dart';
 
 class MyLogin extends StatefulWidget {
   const MyLogin({Key? key}) : super(key: key);
@@ -10,6 +13,28 @@ class MyLogin extends StatefulWidget {
 }
 
 class _MyLoginState extends State<MyLogin> {
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
+  bool isFading = true;
+  bool _isLoading = false;
+
+  void login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    String res = await AuthMethods()
+        .loginUser(email: email.text, password: password.text);
+    if (res == 'success') {
+      final user = FirebaseAuth.instance.currentUser!;
+      Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => MyStatefulWidget()));
+    } else {}
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -55,6 +80,7 @@ class _MyLoginState extends State<MyLogin> {
                       child: Column(
                         children: [
                           TextField(
+                            controller: email,
                             style: TextStyle(color: Colors.black),
                             decoration: InputDecoration(
                                 fillColor: Colors.white,
@@ -68,6 +94,7 @@ class _MyLoginState extends State<MyLogin> {
                             height: 30,
                           ),
                           TextField(
+                            controller: password,
                             style: TextStyle(),
                             obscureText: true,
                             decoration: InputDecoration(
@@ -95,10 +122,7 @@ class _MyLoginState extends State<MyLogin> {
                                 child: IconButton(
                                     color: Colors.white,
                                     onPressed: () {
-                                      Navigator.of(context).push(
-                                          MaterialPageRoute(
-                                              builder: (builder) =>
-                                                  MyStatefulWidget()));
+                                      login();
                                     },
                                     icon: Icon(
                                       Icons.arrow_forward,

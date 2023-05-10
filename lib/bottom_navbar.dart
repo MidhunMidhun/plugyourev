@@ -17,7 +17,7 @@ class _MyStatefulWidgetState extends State<MyStatefulWidget> {
       TextStyle(fontSize: 30, fontWeight: FontWeight.bold);
   static List<Widget> _widgetOptions = <Widget>[
     MapArea(),
-    EnRoute(destination: false, source: false),
+    EnRoute(),
     ChatPage(),
     ProfilePage()
   ];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:introduction_screen/introduction_screen.dart';
 import 'package:plugyourev/login_page.dart';
+import 'package:plugyourev/user_check.dart';
 
 class OnBoardingPage extends StatelessWidget {
   @override
@@ -91,7 +92,7 @@ class OnBoardingPage extends StatelessWidget {
       );
 
   void goToHome(context) => Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => MyLogin()),
+        MaterialPageRoute(builder: (_) => UserCheck()),
       );
 
   Widget buildImage(String path) =>

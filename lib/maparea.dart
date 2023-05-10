@@ -1,9 +1,16 @@
+// ignore_for_file: prefer_const_constructors, prefer_const_literals_to_create_immutables
+
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:dio/dio.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:plugyourev/profile_page.dart';
 import 'package:mapbox_search/mapbox_search.dart';
 import 'package:http/http.dart' as http;
@@ -12,6 +19,7 @@ import 'package:plugyourev/searchpage.dart';
 import 'bottom_navbar.dart';
 import 'chat_page.dart';
 import 'en_route.dart';
+import 'stationpage.dart';
 
 const MAPBOX_ACCESS_TOKEN =
     'pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ';
@@ -32,40 +40,53 @@ class MapArea extends StatefulWidget {
 }
 
 class MapAreaState extends State<MapArea> {
+  double origLat = 0;
+  double origLon = 0;
+  double destLat = 0;
+  double destLon = 0;
+  double xlat = 0;
+  double xlon = 0;
+  double ylat = 0;
+  double ylon = 0;
+
+  double flat = 0;
+  double flon = 0;
+
+  List<LatLng> points = [];
   var _mapController;
   // var _selectedIndex = 0;
+  List<dynamic> locations = [];
+// //search places
+//   String baseUrl = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
+//   String searchType = 'place%2Cpostcode%2Caddress';
+//   String searchResultsLimit = '5';
+//   String proximity = 'ip';
+//   String country = 'in';
 
-//search places
-  String baseUrl = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
-  String searchType = 'place%2Cpostcode%2Caddress';
-  String searchResultsLimit = '5';
-  String proximity = 'ip';
-  String country = 'in';
+//   Dio _dio = Dio();
 
-  Dio _dio = Dio();
-
-  Future getSearchResultsFromQueryUsingMapbox(String searchtext) async {
-    String url =
-        '$baseUrl/$searchtext.json?&proximity=$proximity&access_token=$MAPBOX_ACCESS_TOKEN';
-    url = Uri.parse(url).toString();
-    // String url =
-    //     '$baseUrl/$searchtext.json?country=$country&limit=$searchResultsLimit&proximity=$proximity&types=$searchType&access_token=$MAPBOX_ACCESS_TOKEN';
-    // url = Uri.parse(url).toString();
-    print(url);
-    try {
-      _dio.options.contentType = Headers.jsonContentType;
-      final responseData = await _dio.get(url);
-      setState(() {
-        _placesList.add(responseData.data['features'][0]['place_name']);
-      });
-      print(responseData.data['features'][0]['place_name']);
-      return responseData.data;
-    } catch (e) {
-      var DioExceptions;
-      final errorMessage = DioExceptions.fromDioError(e as DioError).toString();
-      debugPrint(errorMessage);
-    }
-  }
+//   Future getSearchResultsFromQueryUsingMapbox(String searchtext) async {
+//     String url =
+//         '$baseUrl/$searchtext.json?&proximity=$proximity&access_token=$MAPBOX_ACCESS_TOKEN';
+//     url = Uri.parse(url).toString();
+//     // String url =
+//     //     '$baseUrl/$searchtext.json?country=$country&limit=$searchResultsLimit&proximity=$proximity&types=$searchType&access_token=$MAPBOX_ACCESS_TOKEN';
+//     // url = Uri.parse(url).toString();
+//     print(url);
+//     try {
+//       _dio.options.contentType = Headers.jsonContentType;
+//       final responseData = await _dio.get(url);
+//       setState(() {
+//         _placesList.add(responseData.data['features'][0]['place_name']);
+//       });
+//       print(responseData.data['features'][0]['place_name']);
+//       return responseData.data;
+//     } catch (e) {
+//       var DioExceptions;
+//       final errorMessage = DioExceptions.fromDioError(e as DioError).toString();
+//       debugPrint(errorMessage);
+//     }
+//   }
 
   //get user location
   Future<Position> _determinePosition() async {
@@ -99,16 +120,56 @@ class MapAreaState extends State<MapArea> {
   final TextEditingController _searchController = TextEditingController();
   List<MapBoxPlace> _places = [];
   List<String> _placesList = [];
+  List<dynamic> Locations = [];
   @override
   void initState() {
     super.initState();
-
+    getDataFromFirebaseStorage();
     _getCurrentLocation();
     _textEditingController = TextEditingController();
     _searchApi = PlacesSearch(
       apiKey: MAPBOX_ACCESS_TOKEN,
       country: 'in',
     );
+  }
+
+  FirebaseStorage storage = FirebaseStorage.instance;
+  List<dynamic> markersData = []; // list of JSON data representing markers
+  List<Marker> markers = [];
+  String jsonFileName = 'ev_stations_list.json';
+  final pageController = PageController();
+
+  void getDataFromFirebaseStorage() async {
+    try {
+      // Get the download URL for the JSON file
+      String downloadUrl =
+          await storage.ref().child(jsonFileName).getDownloadURL();
+
+      // Make an HTTP GET request to the download URL
+      http.Response response = await http.get(Uri.parse(downloadUrl));
+
+      print("response");
+      print(response);
+
+      // Check if the response is successful
+      if (response.statusCode == 200) {
+        // Parse the JSON data
+        locations = json.decode(response.body);
+
+        // Do something with the data
+
+        setState(() {
+          markersData = locations;
+          print(markersData);
+          _buildMarkers(locations);
+        });
+      } else {
+        // Handle the error
+        print('Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error:here $e');
+    }
   }
 
   Future<void> _onSearch(String query) async {
@@ -131,21 +192,139 @@ class MapAreaState extends State<MapArea> {
     setState(() {
       currentPosition = position;
       print(currentPosition);
+      origLat = currentPosition.latitude;
+      origLon = currentPosition.longitude;
+
+      xlat = currentPosition.latitude;
+      xlon = currentPosition.longitude;
+      ylat = 0;
+      ylon = 0;
     });
+  }
+
+  // final TextEditingController _textEditingController = TextEditingController();
+
+  List<MapBoxPlace> searchResults = [];
+
+  Future<void> getPlaces(String searchQ) async {
+    print("calling with " + searchQ);
+    PlacesSearch placesSearch = PlacesSearch(
+      apiKey:
+          'pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ',
+      limit: 5,
+    );
+
+    List<MapBoxPlace>? results = await placesSearch.getPlaces(searchQ);
+
+    setState(() {
+      searchResults = results!;
+      print(searchResults);
+      print(results);
+    });
+  }
+
+  Map<String, dynamic>? data;
+
+  void handleDirectionsButtonPressed() {
+    getDirections();
+  }
+
+  Future<void> getDirections() async {
+    if (destLat != 0 && destLon != 0 && origLat != 0 && origLon != 0) {
+      String apiUrl =
+          'https://api.mapbox.com/directions/v5/mapbox/driving/$origLon%2C$origLat%3B$destLon%2C$destLat?alternatives=true&geometries=geojson&language=en&overview=simplified&steps=true&access_token=pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ';
+      http.Response response = await http.get(Uri.parse(apiUrl));
+
+      if (response.statusCode == 200) {
+        setState(() {
+          data = json.decode(response.body);
+          for (var x in data!['routes'][0]['geometry']['coordinates']) {
+            points.add(LatLng(x[1], x[0]));
+          }
+          print(points);
+        });
+      } else {
+        // Handle error
+      }
+    }
+  }
+
+  void _buildMarkers(List<dynamic> data) {
+    print("Etering");
+
+    print(data.length);
+    // Iterate through the data and build a Marker widget for each item
+    for (int i = 0; i < data.length; i++) {
+      // print(data[i]['lat']);
+      // print(data[i]['lat'].runtimeType);
+      // double lat = double.parse(data[i]['lat']);
+      // double lng = double.parse(data[i]['long']);
+      // print(lat);
+      // print(lng);
+      LatLng point = LatLng(data[i]['lat'], data[i]['long']);
+      // print(point);
+      markers.add(Marker(
+        point: point,
+        builder: (context) {
+          return GestureDetector(
+            onTap: () {
+              print("i");
+              print(i);
+              print("s.no");
+              print(data[i]['S.no']);
+              pageController.animateToPage(
+                i,
+                duration: const Duration(milliseconds: 500),
+                curve: Curves.easeInOut,
+              );
+              setState(() {});
+            },
+            child: Container(
+              child: const Icon(
+                Icons.ev_station,
+                color: Colors.green,
+                size: 30,
+              ),
+            ),
+          );
+        },
+      ));
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     // ignore: unnecessary_new
+    print('"xlat xlon"');
+    print('$xlat $xlon');
+    print('"ylat ylon"');
+    print('$ylat $ylon');
+
+    if (xlat == 0 && xlon == 0) {
+      if (ylat == 0 && ylon == 0) {
+        setState(() {
+          flat = 8.5460815;
+          flon = 76.9046274;
+        });
+      } else {
+        setState(() {
+          flat = ylat;
+          flon = ylon;
+        });
+      }
+    } else {
+      setState(() {
+        flat = xlat;
+        flon = xlon;
+      });
+    }
 
     return Scaffold(
         body: SafeArea(
       child: Stack(children: [
         FlutterMap(
             options: MapOptions(
-              center: widget.lat != 0 && widget.lng != 0
-                  ? LatLng(widget.lat, widget.lng)
-                  : myCenter,
+              center: LatLng(flat, flon),
               zoom: 12,
             ),
             children: [
@@ -157,34 +336,12 @@ class MapAreaState extends State<MapArea> {
                   'accessToken': MapArea.ACCESS_TOKEN,
                 },
               ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: LatLng(8.5118297, 76.9648622),
-                    builder: (context) {
-                      return Container(
-                        child: const Icon(
-                          Icons.ev_station,
-                          color: Colors.green,
-                          size: 30,
-                        ),
-                      );
-                    },
-                  ),
-                  Marker(
-                    point: LatLng(8.5526740, 76.9430233),
-                    builder: (context) {
-                      return Container(
-                        child: const Icon(
-                          Icons.ev_station,
-                          color: Colors.green,
-                          size: 30,
-                        ),
-                      );
-                    },
-                  )
+              PolylineLayer(
+                polylines: [
+                  Polyline(points: points, strokeWidth: 4, color: Colors.blue)
                 ],
               ),
+              MarkerLayer(markers: markers),
             ]),
         Positioned(
             top: 30,
@@ -195,23 +352,96 @@ class MapAreaState extends State<MapArea> {
                   Container(
                     margin: EdgeInsets.symmetric(horizontal: 10),
                     width: 300,
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    decoration: BoxDecoration(
+                      color: Color.fromARGB(255, 255, 255, 255),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
                     child: GestureDetector(
                       onTap: () {
-                        Navigator.of(context).push(MaterialPageRoute(
-                            builder: (_) => MapBoxSearchScreen()));
+                        showModalBottomSheet(
+                            isScrollControlled: true,
+                            context: context,
+                            builder: ((context) {
+                              return ListView(
+                                children: [
+                                  SizedBox(
+                                    height: 40,
+                                  ),
+                                  Row(
+                                    children: [
+                                      Padding(
+                                        padding: const EdgeInsets.only(
+                                            left: 10, right: 20),
+                                        child: Icon(
+                                          Icons.arrow_back,
+                                          size: 40,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                      Container(
+                                        width:
+                                            MediaQuery.of(context).size.width *
+                                                0.8,
+                                        child: CupertinoSearchTextField(
+                                          controller: _textEditingController,
+                                          onChanged: (v) {
+                                            print(v);
+                                            setState(() {
+                                              getPlaces(v);
+                                            });
+                                          },
+                                          backgroundColor: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(10.0),
+                                          placeholder: 'Search',
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  Container(
+                                    height: 500,
+                                    child: ListView.builder(
+                                      itemCount: searchResults.length,
+                                      itemBuilder:
+                                          (BuildContext context, int index) {
+                                        MapBoxPlace item = searchResults[index];
+                                        return ListTile(
+                                          onTap: () {
+                                            setState(() {
+                                              print(item.geometry!.coordinates);
+                                              double lng = item
+                                                  .geometry!.coordinates![0];
+                                              double lat = item
+                                                  .geometry!.coordinates![1];
+
+                                              ylat = item
+                                                  .geometry!.coordinates![1];
+                                              ylon = item
+                                                  .geometry!.coordinates![0];
+
+                                              xlat = 0;
+                                              xlon = 0;
+                                              Navigator.of(context).pop();
+                                            });
+                                          },
+                                          title: Text(item.placeName!),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              );
+                              ;
+                            }));
                       },
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
                         child: Text(
                           'Search places',
                           style: TextStyle(color: Colors.black),
                         ),
                       ),
-                    ),
-                    padding: EdgeInsets.symmetric(horizontal: 10),
-                    decoration: BoxDecoration(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      borderRadius: BorderRadius.circular(10.0),
                     ),
                     // controller: _textEditingController,
                     // onChanged: getSearchResultsFromQueryUsingMapbox,
@@ -248,13 +478,15 @@ class MapAreaState extends State<MapArea> {
               ),
             )),
         Positioned(
-            bottom: 170,
+            bottom: 200,
             right: 10,
             child: Container(
               decoration:
                   BoxDecoration(shape: BoxShape.circle, color: Colors.white),
               child: IconButton(
-                  onPressed: _getCurrentLocation,
+                  onPressed: () {
+                    _getCurrentLocation();
+                  },
                   icon: Icon(
                     Icons.gps_fixed,
                     color: Colors.blue,
@@ -262,100 +494,215 @@ class MapAreaState extends State<MapArea> {
                   )),
             )),
         Positioned(
-          bottom: 30,
-          left: 20,
-          child: Container(
-            height: 130,
-            width: 360,
-            decoration: BoxDecoration(
-                shape: BoxShape.rectangle,
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10)),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.only(top: 8, left: 8),
-                      child: Image(
-                        height: 110,
-                        width: 100,
-                        image: AssetImage('assets/start1.jpg'),
-                        fit: BoxFit.fill,
-                      ),
-                    ),
-                    Column(
-                      children: [
-                        Container(
-                            padding: EdgeInsets.all(5),
-                            child: Column(children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    child: Icon(Icons.star,
-                                        color: Colors.amber, size: 20),
-                                  )
-                                ],
+          left: 0,
+          right: 0,
+          bottom: 2,
+          height: MediaQuery.of(context).size.height * 0.28,
+          child: PageView.builder(
+            controller: pageController,
+            onPageChanged: (value) {
+              // print("value");
+              // print(value);
+              // pageController.animateToPage(
+              //   value,
+              //   duration: const Duration(milliseconds: 500),
+              //   curve: Curves.easeInOut,
+              // );
+              // setState(() {});
+            },
+            itemCount: markers.length,
+            itemBuilder: (_, index) {
+              final item = markers[index];
+              return Padding(
+                padding: const EdgeInsets.all(15.0),
+                child: Card(
+                  elevation: 5,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  color: Color.fromARGB(255, 250, 250, 250),
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: ListView.builder(
+                                padding: EdgeInsets.zero,
+                                scrollDirection: Axis.horizontal,
+                                itemCount: locations[index]['rating'],
+                                itemBuilder: (BuildContext context, int index) {
+                                  return const Icon(
+                                    Icons.star,
+                                    color: Colors.orange,
+                                  );
+                                },
                               ),
-                              Row(
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Electric Vehicle Charging Station',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      height: 1,
-                                    ),
-                                  )
-                                ],
-                              ),
-                              Row(
-                                children: [Text('Nalanchira')],
-                              ),
-                              Row(
-                                children: [
-                                  Column(
-                                    children: [
-                                      Text(
-                                        'Connection:',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold),
+                                  GestureDetector(
+                                    onTap: () => Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                            builder: (builder) =>
+                                                stationpage())),
+                                    child: Text(
+                                      locations[index]['title'] ?? '',
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
                                       ),
-                                      Text(
-                                        'Type2  CCS',
-                                        style: TextStyle(fontSize: 10),
-                                      )
-                                    ],
+                                    ),
                                   ),
-                                  Column(
-                                    children: [
-                                      TextButton(
-                                          onPressed: null,
-                                          style: ButtonStyle(
-                                              backgroundColor:
-                                                  MaterialStateProperty.all(
-                                                      Colors.blue[600])),
-                                          child: Text(
-                                            'Get Direction',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ))
-                                    ],
-                                  )
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    locations[index]['city'] ?? '',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey,
+                                    ),
+                                  ),
                                 ],
-                              )
-                            ]))
-                      ],
-                    )
-                  ],
-                )
-              ],
-            ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(7.0),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Image(
+                                  image: NetworkImage(
+                                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7uynsZtn6oBeQRpyLKY94qwBR-L5BGIAsL1aCR_mL&s",
+                                  ),
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
+                            ),
+                            TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    destLat = locations[index]['lat'];
+                                    destLon = locations[index]['long'];
+                                  });
+
+                                  handleDirectionsButtonPressed();
+                                },
+                                style: ButtonStyle(
+                                    backgroundColor:
+                                        MaterialStatePropertyAll(Colors.blue)),
+                                child: Text(
+                                  'Get Direction',
+                                  style: TextStyle(color: Colors.white),
+                                ))
+                          ],
+                        ),
+                      ),
+                      // const SizedBox(width: 10),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         )
       ]),
     ));
   }
 }
+
+// class searchpage extends StatelessWidget {
+//   searchpage({
+//     super.key,
+//   });
+
+//   final TextEditingController _textEditingController = TextEditingController();
+
+//   List<MapBoxPlace> searchResults = [];
+
+//   Future<void> getPlaces(String searchQ) async {
+//     print("calling with " + searchQ);
+//     PlacesSearch placesSearch = PlacesSearch(
+//       apiKey:
+//           'pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ',
+//       limit: 5,
+//     );
+
+//     List<MapBoxPlace>? results = await placesSearch.getPlaces(searchQ);
+
+//     print(results);
+
+//     setState(() {
+//       print(results);
+//       searchResults = results!;
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListView(
+//       children: [
+//         SizedBox(
+//           height: 40,
+//         ),
+//         Row(
+//           children: [
+//             Padding(
+//               padding: const EdgeInsets.only(left: 10, right: 20),
+//               child: Icon(
+//                 Icons.arrow_back,
+//                 size: 40,
+//                 color: Colors.grey,
+//               ),
+//             ),
+//             Container(
+//               width: MediaQuery.of(context).size.width * 0.8,
+//               child: CupertinoSearchTextField(
+//                 controller: _textEditingController,
+//                 onChanged: (v) {
+//                   print(v);
+//                   getPlaces(v);
+//                 },
+//                 backgroundColor: Colors.white,
+//                 borderRadius: BorderRadius.circular(10.0),
+//                 placeholder: 'Search',
+//               ),
+//             ),
+//           ],
+//         ),
+//         Container(
+//           height: 500,
+//           child: ListView.builder(
+//             itemCount: resul.length,
+//             itemBuilder: (BuildContext context, int index) {
+//               MapBoxPlace item = searchResults[index];
+//               return ListTile(
+//                 onTap: () {
+//                   print(item.geometry!.coordinates);
+//                   double lng = item.geometry!.coordinates![0];
+//                   double lat = item.geometry!.coordinates![1];
+//                 },
+//                 title: Text(item.placeName!),
+//               );
+//             },
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   void setState(Null Function() param0) {}
+// }
 
 class filter_page extends StatelessWidget {
   const filter_page({

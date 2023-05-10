@@ -1,27 +1,14 @@
 import 'dart:convert';
+import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:mapbox_search/mapbox_search.dart';
 
-import 'searchpage_enroute.dart';
-
 final myCenter = LatLng(8.5460815, 76.9046274);
 
 class EnRoute extends StatefulWidget {
-  bool source;
-  bool destination;
-  double lat;
-  double lon;
-
-  EnRoute(
-      {Key? key,
-      this.source = false,
-      this.destination = false,
-      this.lat = 0,
-      this.lon = 0})
-      : super(key: key);
   static const String ACCESS_TOKEN = String.fromEnvironment(
       "pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ");
   static const String mapBoxStyleId = 'clfgi2vwf00a901rxqoiggpna';
@@ -30,6 +17,8 @@ class EnRoute extends StatefulWidget {
   State<EnRoute> createState() => _EnRouteState();
 }
 
+late TextEditingController _textEditingController;
+
 //Test Comments
 class _EnRouteState extends State<EnRoute> {
   double origLat = 0;
@@ -37,8 +26,12 @@ class _EnRouteState extends State<EnRoute> {
   double destLat = 0;
   double destLon = 0;
   final TextEditingController controller = TextEditingController();
+  late final PlacesSearch _searchApi;
   List<MapBoxPlace> places = [];
+  List<MapBoxPlace> _places = [];
   List<LatLng> points = [];
+  String sourceName = '';
+  String destName = '';
 
 //navigation directions
   String apiKey =
@@ -70,30 +63,49 @@ class _EnRouteState extends State<EnRoute> {
     }
   }
 
+  Future<void> _onSearch(String query) async {
+    if (query.isNotEmpty) {
+      final places = await _searchApi.getPlaces(
+        query,
+        // types: [PlaceType.address, PlaceType.poi],
+      );
+      setState(() {
+        _places = places!;
+      });
+    }
+  }
+
+  List<MapBoxPlace> searchResults = [];
+
+  Future<void> getPlaces(String searchQ) async {
+    print("calling with " + searchQ);
+    PlacesSearch placesSearch = PlacesSearch(
+      apiKey:
+          'pk.eyJ1IjoibW1pZGh1biIsImEiOiJjbGFxYTIxODcxNDB0M3ZucGlmcWp3cHpuIn0.4ekFwyhXAkUt-zYu9ePDpQ',
+      limit: 5,
+    );
+
+    List<MapBoxPlace>? results = await placesSearch.getPlaces(searchQ);
+
+    setState(() {
+      searchResults = results!;
+      print(searchResults);
+      print(results);
+    });
+  }
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
-    if (widget.source) {
-      print("setting source");
-      origLat = widget.lat;
-      origLon = widget.lon;
-    }
-
-    if (widget.destination) {
-      print("setting dest");
-      destLat = widget.lat;
-      destLon = widget.lon;
-    }
+    _textEditingController = TextEditingController();
+    _searchApi = PlacesSearch(
+      apiKey: apiKey,
+      country: 'in',
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    print("source");
-    print(widget.source);
-    print("dest");
-    print(widget.destination);
-
     return Scaffold(
       body: Stack(
         children: [
@@ -132,30 +144,172 @@ class _EnRouteState extends State<EnRoute> {
                       children: [
                         GestureDetector(
                             onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => MapBoxSearchScreenEnroute(
-                                        target: 'source',
-                                      )));
+                              showModalBottomSheet(
+                                  isScrollControlled: true,
+                                  context: context,
+                                  builder: ((context) {
+                                    return ListView(
+                                      children: [
+                                        SizedBox(
+                                          height: 40,
+                                        ),
+                                        Row(
+                                          children: [
+                                            Padding(
+                                              padding: const EdgeInsets.only(
+                                                  left: 10, right: 20),
+                                              child: Icon(
+                                                Icons.arrow_back,
+                                                size: 40,
+                                                color: Colors.grey,
+                                              ),
+                                            ),
+                                            Container(
+                                              width: MediaQuery.of(context)
+                                                      .size
+                                                      .width *
+                                                  0.8,
+                                              child: CupertinoSearchTextField(
+                                                controller:
+                                                    _textEditingController,
+                                                onChanged: (v) {
+                                                  print(v);
+                                                  setState(() {
+                                                    getPlaces(v);
+                                                  });
+                                                },
+                                                backgroundColor: Colors.white,
+                                                borderRadius:
+                                                    BorderRadius.circular(10.0),
+                                                placeholder: 'Search',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Container(
+                                          height: 500,
+                                          child: ListView.builder(
+                                            itemCount: searchResults.length,
+                                            itemBuilder: (BuildContext context,
+                                                int index) {
+                                              MapBoxPlace item =
+                                                  searchResults[index];
+                                              return ListTile(
+                                                onTap: () {
+                                                  print(item
+                                                      .geometry!.coordinates);
+                                                  origLon = item.geometry!
+                                                      .coordinates![0];
+                                                  origLat = item.geometry!
+                                                      .coordinates![1];
+                                                  setState(() {
+                                                    sourceName =
+                                                        item.placeName!;
+                                                  });
+                                                  Navigator.of(context).pop();
+                                                },
+                                                title: Text(item.placeName!),
+                                              );
+                                            },
+                                          ),
+                                        ),
+                                      ],
+                                    );
+                                  }));
                             },
                             child: Container(
                               width: 200,
                               height: 50,
                               color: Colors.white,
-                              child: Text('source'),
+                              child: sourceName == ''
+                                  ? Text('source')
+                                  : Text(sourceName),
                             )),
                         GestureDetector(
-                            onTap: () {
-                              Navigator.of(context).push(MaterialPageRoute(
-                                  builder: (_) => MapBoxSearchScreenEnroute(
-                                        target: 'destination',
-                                      )));
-                            },
-                            child: Container(
-                              width: 200,
-                              height: 50,
-                              color: Colors.white,
-                              child: Text('source'),
-                            ))
+                          onTap: () {
+                            showModalBottomSheet(
+                                isScrollControlled: true,
+                                context: context,
+                                builder: ((context) {
+                                  return ListView(
+                                    children: [
+                                      SizedBox(
+                                        height: 40,
+                                      ),
+                                      Row(
+                                        children: [
+                                          Padding(
+                                            padding: const EdgeInsets.only(
+                                                left: 10, right: 20),
+                                            child: Icon(
+                                              Icons.arrow_back,
+                                              size: 40,
+                                              color: Colors.grey,
+                                            ),
+                                          ),
+                                          Container(
+                                            width: MediaQuery.of(context)
+                                                    .size
+                                                    .width *
+                                                0.8,
+                                            child: CupertinoSearchTextField(
+                                              controller:
+                                                  _textEditingController,
+                                              onChanged: (v) {
+                                                print(v);
+                                                setState(() {
+                                                  getPlaces(v);
+                                                });
+                                              },
+                                              backgroundColor: Colors.white,
+                                              borderRadius:
+                                                  BorderRadius.circular(10.0),
+                                              placeholder: 'Search',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      Container(
+                                        height: 500,
+                                        child: ListView.builder(
+                                          itemCount: searchResults.length,
+                                          itemBuilder: (BuildContext context,
+                                              int index) {
+                                            MapBoxPlace item =
+                                                searchResults[index];
+                                            return ListTile(
+                                              onTap: () {
+                                                print(
+                                                    item.geometry!.coordinates);
+                                                destLon = item
+                                                    .geometry!.coordinates![0];
+                                                destLat = item
+                                                    .geometry!.coordinates![1];
+                                                setState(() {
+                                                  destName = item.placeName!;
+                                                });
+
+                                                Navigator.of(context).pop();
+                                              },
+                                              title: Text(item.placeName!),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  );
+                                  ;
+                                }));
+                          },
+                          child: Container(
+                            width: 200,
+                            height: 50,
+                            color: Colors.white,
+                            child: destName == ''
+                                ? Text('destination')
+                                : Text(destName),
+                          ),
+                        ),
                       ],
                     ),
                   ),
