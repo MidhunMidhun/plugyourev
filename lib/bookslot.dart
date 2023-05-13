@@ -5,6 +5,8 @@ import 'package:flutter/src/widgets/placeholder.dart';
 import 'package:plugyourev/stationpage.dart';
 import 'package:intl/intl.dart';
 
+import 'paymentverify.dart';
+
 class bookslot extends StatefulWidget {
   const bookslot({super.key});
 
@@ -44,6 +46,7 @@ class _bookslotState extends State<bookslot> {
 
   //select time
   TimeOfDay selectedTime = TimeOfDay.now();
+  TextEditingController _controller = TextEditingController();
 
   Future<void> _selectTime(BuildContext context) async {
     final TimeOfDay? pickedTime =
@@ -52,11 +55,49 @@ class _bookslotState extends State<bookslot> {
     if (pickedTime != null) {
       setState(() {
         selectedTime = pickedTime;
+        //_controller.text = pickedTime.format(context);
       });
     }
   }
 
   @override
+  void initState() {
+    super.initState();
+    //_controller.text = 'Select Time';
+  }
+
+  String selectedVehicle = 'Select Vehicle model';
+  void _openModalSheet(BuildContext context) async {
+    final selectedmodel = await showModalBottomSheet<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return vehiclemodel();
+      },
+    );
+
+    if (selectedmodel != null) {
+      setState(() {
+        selectedVehicle = selectedmodel;
+      });
+    }
+  }
+
+  void _openConnectionTypeModal(BuildContext context) async {
+    final selectedChargerType = await showModalBottomSheet<ChargerType>(
+      context: context,
+      builder: (BuildContext context) {
+        return ConnectionTypeModalSheet();
+      },
+    );
+
+    if (selectedChargerType != null) {
+      setState(() {
+        // Update the selected charger type with a blue background color
+        selectedChargerType.isSelected = true;
+      });
+    }
+  }
+
   Widget build(BuildContext context) {
     return Scaffold(
       body: Column(
@@ -312,30 +353,44 @@ class _bookslotState extends State<bookslot> {
                     Container(
                         height: 40,
                         width: MediaQuery.of(context).size.width * 0.9,
-                        child: Container(
-                            height: 30,
-                            width: 80,
-                            padding: EdgeInsets.symmetric(horizontal: 10),
-                            decoration: BoxDecoration(
-                                border: Border.all(
+                        child: GestureDetector(
+                          onTap: () {
+                            // showModalBottomSheet(
+                            //     context: context,
+                            //     builder: ((context) {
+                            //       return vehiclemodel();
+
+                            //     }));
+                            _openModalSheet(context);
+                          },
+                          child: Container(
+                              height: 30,
+                              width: 80,
+                              padding: EdgeInsets.symmetric(horizontal: 10),
+                              decoration: BoxDecoration(
+                                  border: Border.all(
+                                      color: Colors.grey,
+                                      style: BorderStyle.solid,
+                                      width: 1),
+                                  borderRadius: BorderRadius.circular(5)),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  selectedVehicle != ''
+                                      ? Text(selectedVehicle)
+                                      : Text(
+                                          'Select your vehicle model',
+                                          style: TextStyle(color: Colors.grey),
+                                        ),
+                                  Icon(
+                                    Icons.arrow_forward_ios,
                                     color: Colors.grey,
-                                    style: BorderStyle.solid,
-                                    width: 1),
-                                borderRadius: BorderRadius.circular(5)),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'Select your vehicle model',
-                                  style: TextStyle(color: Colors.grey),
-                                ),
-                                Icon(
-                                  Icons.arrow_forward_ios,
-                                  color: Colors.grey,
-                                  size: 20,
-                                )
-                              ],
-                            ))),
+                                    size: 20,
+                                  )
+                                ],
+                              )),
+                        )),
                   ],
                 ),
               ),
@@ -363,13 +418,7 @@ class _bookslotState extends State<bookslot> {
                         width: MediaQuery.of(context).size.width * 0.9,
                         child: GestureDetector(
                           onTap: () {
-                            showModalBottomSheet(
-                                context: context,
-                                builder: ((context) {
-                                  return Container(
-                                    child: Text('connection type'),
-                                  );
-                                }));
+                            _openConnectionTypeModal(context);
                           },
                           child: Container(
                               height: 30,
@@ -498,7 +547,7 @@ class _bookslotState extends State<bookslot> {
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  selectedTime == null
+                                  selectedTime == TimeOfDay.now()
                                       ? Text(
                                           'Select time',
                                           style: TextStyle(color: Colors.grey),
@@ -526,8 +575,16 @@ class _bookslotState extends State<bookslot> {
               Container(
                 width: MediaQuery.of(context).size.width * 0.75,
                 child: TextButton(
-                    onPressed: () => null, //Navigator.of(context).push(
-                    //MaterialPageRoute(builder: (builder) => bookslot())),
+                    onPressed: () =>
+                        Navigator.of(context).push(MaterialPageRoute(
+                            builder: (builder) => paymentverify(
+                                  chargingStationName: "SELECTED STATION",
+                                  vehicleModel: 'Hyundai',
+                                  date: '22/10/2023',
+                                  time: '3:00 PM',
+                                  connectionType: 'CCS',
+                                  amountToPay: 20.5,
+                                ))),
                     style: ButtonStyle(
                         backgroundColor: MaterialStatePropertyAll(Colors.blue)),
                     child: Text(
@@ -541,4 +598,226 @@ class _bookslotState extends State<bookslot> {
       ),
     );
   }
+}
+
+//modal sheet for selecting vehicle model
+class vehiclemodel extends StatefulWidget {
+  const vehiclemodel({
+    super.key,
+  });
+
+  @override
+  State<vehiclemodel> createState() => _vehiclemodelState();
+}
+
+class _vehiclemodelState extends State<vehiclemodel> {
+  List<String> electricVehicles = [
+    'Tata Nexon EV',
+    'MG ZS EV',
+    'Hyundai Kona Electric',
+    'Mahindra eVerito',
+    'Mahindra e2o Plus',
+    'Tata Tigor EV',
+    'Mercedes-Benz EQC',
+    'Audi e-Tron',
+    'BMW i3s',
+    'Jaguar I-Pace',
+    'Hyundai Ioniq Electric',
+    'Renault K-ZE',
+    'Nissan Leaf',
+    'Ather 450X',
+    'Bajaj Chetak',
+    'TVS iQube Electric',
+    'Hero Electric Optima HS500 ER',
+  ];
+  List<String> filteredElectricVehicles = [];
+  TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    filteredElectricVehicles = electricVehicles;
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  void _filterElectricVehicles(String searchText) {
+    setState(() {
+      filteredElectricVehicles = electricVehicles
+          .where((vehicle) =>
+              vehicle.toLowerCase().contains(searchText.toLowerCase()))
+          .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Text('Vehicle model'),
+          TextField(
+            controller: _searchController,
+            onChanged: (value) => _filterElectricVehicles(value),
+            decoration: InputDecoration(
+              hintText: 'Search Electric Vehicles',
+              prefixIcon: Icon(Icons.search),
+            ),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Expanded(
+            child: ListView.builder(
+              itemCount: filteredElectricVehicles.length,
+              itemBuilder: (BuildContext context, int index) {
+                return ListTile(
+                  title: Text(filteredElectricVehicles[index]),
+                  onTap: () {
+                    // Perform action when an electric vehicle is selected
+
+                    String selectedmodel = filteredElectricVehicles[index];
+
+                    Navigator.pop(context, selectedmodel);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// connection type
+class ConnectionTypeModalSheet extends StatefulWidget {
+  @override
+  State<ConnectionTypeModalSheet> createState() =>
+      _ConnectionTypeModalSheetState();
+}
+
+class _ConnectionTypeModalSheetState extends State<ConnectionTypeModalSheet> {
+  String selectedConnectionType = '';
+  final List<ChargerType> chargerTypes = [
+    ChargerType(
+      name: 'CCS',
+      icon: Icons.flash_on,
+      chargingSpeed: '50 kW',
+      isSelected: false,
+    ),
+    ChargerType(
+      name: 'CCS2',
+      icon: Icons.flash_on,
+      chargingSpeed: '100 kW',
+      isSelected: false,
+    ),
+    ChargerType(
+      name: 'Type 1',
+      icon: Icons.ev_station,
+      chargingSpeed: '15 kW',
+      isSelected: false,
+    ),
+    ChargerType(
+      name: 'Type 2',
+      icon: Icons.ev_station,
+      chargingSpeed: '22 kW',
+      isSelected: false,
+    ),
+    ChargerType(
+      name: 'CHAdeMO',
+      icon: Icons.ev_station,
+      chargingSpeed: '50 kW',
+      isSelected: false,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      child: ListView(
+        children: [
+          Align(
+            alignment: Alignment.center,
+            child: Text(
+              'Connection Type',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          SizedBox(
+            height: 15,
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: chargerTypes.map((chargerType) {
+              return GestureDetector(
+                onTap: () {
+                  print(chargerType.name);
+                  Navigator.pop(context, chargerType);
+                },
+                child: Container(
+                  margin: EdgeInsets.only(bottom: 16),
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: chargerType.isSelected ? Colors.blue : Colors.grey,
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(chargerType.icon),
+                      SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              chargerType.name,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'Charging Speed: ${chargerType.chargingSpeed}',
+                              style: TextStyle(
+                                color: Colors.grey,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class ChargerType {
+  final String name;
+  final IconData icon;
+  final String chargingSpeed;
+  bool isSelected;
+
+  ChargerType({
+    required this.name,
+    required this.icon,
+    required this.chargingSpeed,
+    this.isSelected = false,
+  });
 }
