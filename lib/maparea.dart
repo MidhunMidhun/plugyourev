@@ -51,6 +51,7 @@ class MapAreaState extends State<MapArea> {
 
   double flat = 0;
   double flon = 0;
+  int selectedMarker = 1;
 
   List<LatLng> points = [];
   var _mapController;
@@ -148,8 +149,8 @@ class MapAreaState extends State<MapArea> {
       // Make an HTTP GET request to the download URL
       http.Response response = await http.get(Uri.parse(downloadUrl));
 
-      print("response");
-      print(response);
+      // print("response");
+      // print(response);
 
       // Check if the response is successful
       if (response.statusCode == 200) {
@@ -241,7 +242,7 @@ class MapAreaState extends State<MapArea> {
           for (var x in data!['routes'][0]['geometry']['coordinates']) {
             points.add(LatLng(x[1], x[0]));
           }
-          print(points);
+          // print(points);
         });
       } else {
         // Handle error
@@ -250,9 +251,6 @@ class MapAreaState extends State<MapArea> {
   }
 
   void _buildMarkers(List<dynamic> data) {
-    print("Etering");
-
-    print(data.length);
     // Iterate through the data and build a Marker widget for each item
     for (int i = 0; i < data.length; i++) {
       // print(data[i]['lat']);
@@ -262,6 +260,7 @@ class MapAreaState extends State<MapArea> {
       // print(lat);
       // print(lng);
       LatLng point = LatLng(data[i]['lat'], data[i]['long']);
+
       // print(point);
       markers.add(Marker(
         point: point,
@@ -272,12 +271,18 @@ class MapAreaState extends State<MapArea> {
               print(i);
               print("s.no");
               print(data[i]['S.no']);
+
               pageController.animateToPage(
                 i,
                 duration: const Duration(milliseconds: 500),
                 curve: Curves.easeInOut,
               );
-              setState(() {});
+              setState(() {
+                selectedMarker = data[i]['S.no'];
+                print(
+                  'selectedMarker $selectedMarker',
+                );
+              });
             },
             child: Container(
               child: const Icon(
@@ -542,15 +547,17 @@ class MapAreaState extends State<MapArea> {
                               ),
                             ),
                             Expanded(
-                              flex: 2,
+                              flex: 3,
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   GestureDetector(
-                                    onTap: () => Navigator.of(context).push(
-                                        MaterialPageRoute(
-                                            builder: (builder) =>
-                                                stationpage())),
+                                    onTap: () => Navigator.of(context)
+                                        .push(MaterialPageRoute(
+                                            builder: (builder) => stationpage(
+                                                  selectedMarker:
+                                                      selectedMarker,
+                                                ))),
                                     child: Text(
                                       locations[index]['title'] ?? '',
                                       style: const TextStyle(
@@ -581,11 +588,18 @@ class MapAreaState extends State<MapArea> {
                               padding: const EdgeInsets.all(7.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
-                                child: Image(
-                                  image: NetworkImage(
-                                    "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7uynsZtn6oBeQRpyLKY94qwBR-L5BGIAsL1aCR_mL&s",
+                                child: GestureDetector(
+                                  onTap: () => Navigator.of(context)
+                                      .push(MaterialPageRoute(
+                                          builder: (builder) => stationpage(
+                                                selectedMarker: selectedMarker,
+                                              ))),
+                                  child: Image(
+                                    image: NetworkImage(
+                                      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR7uynsZtn6oBeQRpyLKY94qwBR-L5BGIAsL1aCR_mL&s",
+                                    ),
+                                    fit: BoxFit.cover,
                                   ),
-                                  fit: BoxFit.cover,
                                 ),
                               ),
                             ),

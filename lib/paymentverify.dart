@@ -1,37 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter/src/widgets/placeholder.dart';
+import 'package:plugyourev/bottom_navbar.dart';
 
 import 'paymentmethods.dart';
 
 class paymentverify extends StatefulWidget {
   final String chargingStationName;
+  final String city;
+  final int index;
   final String vehicleModel;
   final String date;
   final String time;
+  final String slot;
   final String connectionType;
-  final double amountToPay;
 
   paymentverify({
     required this.chargingStationName,
+    required this.city,
+    required this.index,
     required this.vehicleModel,
     required this.date,
     required this.time,
+    required this.slot,
     required this.connectionType,
-    required this.amountToPay,
   });
   @override
   State<paymentverify> createState() => _paymentverifyState();
 }
 
 class _paymentverifyState extends State<paymentverify> {
-  double convenienceFee = 4;
-  double tax = 0.2;
-
   @override
   Widget build(BuildContext context) {
-    double nTax = widget.amountToPay * tax;
-    double payAmount = widget.amountToPay + convenienceFee + nTax;
     return Scaffold(
         body: Container(
       color: Colors.blue.shade200,
@@ -54,10 +54,19 @@ class _paymentverifyState extends State<paymentverify> {
               child: Column(
                 children: [
                   SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      widget.chargingStationName,
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  SizedBox(height: 8),
                   Text(
-                    widget.chargingStationName,
+                    widget.city,
                     style: TextStyle(
-                      fontSize: 16,
+                      fontSize: 10,
                     ),
                   ),
                 ],
@@ -136,6 +145,24 @@ class _paymentverifyState extends State<paymentverify> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
+                        'Slot:',
+                        style: TextStyle(
+                          fontSize: 16,
+                        ),
+                      ),
+                      Text(
+                        widget.slot,
+                        style: TextStyle(
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
                         'Vehicle:',
                         style: TextStyle(
                           fontSize: 16,
@@ -172,51 +199,15 @@ class _paymentverifyState extends State<paymentverify> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Charging Fee',
+                        'Booking Fee',
                         style: TextStyle(
                           fontSize: 16,
                         ),
                       ),
                       Text(
-                        widget.amountToPay.toString(),
+                        '4',
                         style: TextStyle(
                           fontSize: 14,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Convenience fee',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '$convenienceFee',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Tax',
-                        style: TextStyle(
-                          fontSize: 10,
-                        ),
-                      ),
-                      Text(
-                        '${nTax.toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 10,
                         ),
                       ),
                     ],
@@ -229,7 +220,7 @@ class _paymentverifyState extends State<paymentverify> {
             Align(
               alignment: Alignment.center,
               child: Text(
-                'Amount to pay: Rs ${payAmount}',
+                'Amount to pay: Rs 4',
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
               ),
             ),
@@ -241,13 +232,39 @@ class _paymentverifyState extends State<paymentverify> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => PaymentMethodsPage(),
+                      builder: (context) => PaymentMethodsPage(
+                          chargingStationName: widget.chargingStationName,
+                          city: widget.city,
+                          index: widget.index,
+                          vehicleModel: widget.vehicleModel,
+                          date: widget.date,
+                          time: widget.time,
+                          slot: widget.slot,
+                          connectionType: widget.connectionType,
+                          payAmount: 4),
                     ),
                   );
                 },
                 child: Text('Make Payment'),
               ),
             ),
+            Align(
+                alignment: Alignment.center,
+                child: ElevatedButton(
+                    style: ButtonStyle(
+                        backgroundColor: MaterialStatePropertyAll(Colors.blue)),
+                    onPressed: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => MyStatefulWidget()));
+                    },
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: Colors.white,
+                      ),
+                    )))
           ],
         ),
       ),

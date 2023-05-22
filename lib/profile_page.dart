@@ -7,6 +7,7 @@ import 'package:flutter_svg/flutter_svg.dart';
 
 import 'auth.dart';
 import 'login_page.dart';
+import 'mybookings.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({Key? key}) : super(key: key);
@@ -89,35 +90,53 @@ class _ProfilePageState extends State<ProfilePage> {
           SizedBox(
             height: 20,
           ),
-          ProfileMenu(
-            icon: Icons.person_outline,
-            text: 'My Account',
-            press: () {},
-          ),
-          ProfileMenu(
-            icon: Icons.notifications_outlined,
-            text: 'Notifications',
-            press: () {},
-          ),
-          ProfileMenu(
-            icon: Icons.settings_outlined,
-            text: 'Settings',
-            press: () {},
-          ),
-          ProfileMenu(
-            icon: Icons.question_mark_outlined,
-            text: 'Help Center',
-            press: () {},
-          ),
-          ProfileMenu(
-            icon: Icons.logout_outlined,
-            text: 'Log Out',
-            press: () {
-              Navigator.of(context).push(MaterialPageRoute(
-                  builder: (BuildContext context) => MyLogin()));
-              signOutUser();
-            },
-          ),
+          Expanded(
+            child: ListView(
+              children: [
+                ProfileMenu(
+                  icon: Icons.person_outline,
+                  text: 'My Profile',
+                  press: () {},
+                ),
+                ProfileMenu(
+                  icon: Icons.data_saver_off,
+                  text: 'My Bookings',
+                  press: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => mybookings(),
+                      ),
+                    );
+                  },
+                ),
+                ProfileMenu(
+                  icon: Icons.notifications_outlined,
+                  text: 'Notifications',
+                  press: () {},
+                ),
+                ProfileMenu(
+                  icon: Icons.settings_outlined,
+                  text: 'Settings',
+                  press: () {},
+                ),
+                ProfileMenu(
+                  icon: Icons.question_mark_outlined,
+                  text: 'Help Center',
+                  press: () {},
+                ),
+                ProfileMenu(
+                  icon: Icons.logout_outlined,
+                  text: 'Log Out',
+                  press: () {
+                    Navigator.of(context).push(MaterialPageRoute(
+                        builder: (BuildContext context) => MyLogin()));
+                    signOutUser();
+                  },
+                ),
+              ],
+            ),
+          )
         ],
       ),
       // bottomNavigationBar: MyBottomNavigationBar(
