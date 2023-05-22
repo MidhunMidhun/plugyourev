@@ -832,18 +832,23 @@ class _CustomTimeSlotDialogState extends State<CustomTimeSlotDialog> {
                   final time = TimeOfDay(hour: index, minute: 0);
                   final formattedTime = time.format(context);
                   return GestureDetector(
-                    onTap: () {
+                    onTap: () async {
                       setState(() {
                         selectedTime = time;
-                        fetchBookedSlots(formattedTime);
+                        selectedSlotIndex = null;
+                        selectedSlot = '';
+                        bookedSlots.clear();
                       });
+                      await fetchBookedSlots(formattedTime);
                     },
                     child: Container(
                       margin: EdgeInsets.symmetric(horizontal: 4),
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: Colors.grey[300],
+                        color: selectedTime == time
+                            ? Colors.blue
+                            : Colors.grey[300],
                       ),
                       child: Text(formattedTime),
                     ),
@@ -854,22 +859,24 @@ class _CustomTimeSlotDialogState extends State<CustomTimeSlotDialog> {
             SizedBox(height: 10),
             if (selectedTime != null)
               Row(
-                children: List<Widget>.generate(
-                  totalSlots,
-                  (index) => GestureDetector(
+                children: List<Widget>.generate(totalSlots, (index) {
+                  final slot = 'S${index + 1}';
+                  final isBooked = bookedSlots.contains(slot);
+
+                  final isSelected = selectedSlotIndex == index;
+                  final isSelectable = !isBooked || isSelected;
+                  return GestureDetector(
                     onTap: () {
+                      if (isBooked) {
+                        return; // Do not allow selection for booked slots
+                      }
                       setState(() {
-                        if (selectedSlotIndex == index) {
-                          selectedSlotIndex = null; // Deselect the slot
-                        } else {
-                          selectedSlotIndex = index; // Select the slot
+                        if (!isSelectable) {
+                          return; // Do not allow selection for booked slots when not already selected
                         }
-                        if (selectedSlotIndex != null) {
-                          selectedSlot = 'S${selectedSlotIndex! + 1}';
-                          print('Selected Slot: $selectedSlot');
-                        } else {
-                          print('No slot selected');
-                        }
+                        selectedSlotIndex = isSelected ? null : index;
+                        selectedSlot = (isSelected ? null : slot)!;
+                        print('Selected Slot: $selectedSlot');
                       });
                     },
                     child: Container(
@@ -877,14 +884,21 @@ class _CustomTimeSlotDialogState extends State<CustomTimeSlotDialog> {
                       padding: EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(12),
-                        color: selectedSlotIndex == index
-                            ? Colors.blue
-                            : Colors.green, // Modify the color as needed
+                        color: isBooked
+                            ? Colors.red
+                            : isSelected
+                                ? Colors.blue
+                                : Colors.green,
                       ),
-                      child: Text('S${index + 1}'),
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Text('S${index + 1}'),
+                        ],
+                      ),
                     ),
-                  ),
-                ),
+                  );
+                }),
               ),
           ],
         ),

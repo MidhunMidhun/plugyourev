@@ -253,15 +253,8 @@ class MapAreaState extends State<MapArea> {
   void _buildMarkers(List<dynamic> data) {
     // Iterate through the data and build a Marker widget for each item
     for (int i = 0; i < data.length; i++) {
-      // print(data[i]['lat']);
-      // print(data[i]['lat'].runtimeType);
-      // double lat = double.parse(data[i]['lat']);
-      // double lng = double.parse(data[i]['long']);
-      // print(lat);
-      // print(lng);
       LatLng point = LatLng(data[i]['lat'], data[i]['long']);
 
-      // print(point);
       markers.add(Marker(
         point: point,
         builder: (context) {
