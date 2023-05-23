@@ -92,6 +92,7 @@ class _EnRouteState extends State<EnRoute> {
   List<dynamic> markersData = []; // list of JSON data representing markers
   List<Marker> markers = [];
   List<dynamic> locations = [];
+  int s_id = 0;
   String jsonFileName = 'ev_stations_list.json';
   void getDataFromFirebaseStorage() async {
     try {
@@ -130,36 +131,40 @@ class _EnRouteState extends State<EnRoute> {
     // Iterate through the data and build a Marker widget for each item
     for (int i = 0; i < data.length; i++) {
       LatLng point = LatLng(data[i]['lat'], data[i]['long']);
-      _point.add(point);
+      double nearestDistance = double.infinity;
+      LatLng? nearestPoint;
+      int s_id = data[i]['S.no'];
 
-      markers.add(Marker(
-        point: point,
-        builder: (context) {
-          return Container(
-            child: const Icon(
-              Icons.ev_station,
-              color: Colors.green,
-              size: 30,
-            ),
-          );
-        },
-      ));
-    }
-    print('markers coordinates:$_point');
-    calculateDistances();
-  }
+      for (LatLng p in points) {
+        double distance = haversineDistance(
+          point.latitude,
+          point.longitude,
+          p.latitude,
+          p.longitude,
+        );
 
-  void calculateDistances() {
-    List<double> distances = [];
-
-    for (LatLng p in points) {
-      for (LatLng x in _point) {
-        double distance =
-            haversineDistance(p.latitude, p.longitude, x.latitude, x.longitude);
-        distances.add(distance);
+        if (distance < nearestDistance) {
+          nearestDistance = distance;
+          nearestPoint = p;
+        }
+      }
+      if (nearestDistance < 5) {
+        markers.add(Marker(
+          point: point,
+          builder: (context) {
+            return Container(
+              child: const Icon(
+                Icons.ev_station,
+                color: Colors.green,
+                size: 30,
+              ),
+            );
+          },
+        ));
+        print(
+            'Marker ID: $s_id, Distance: $nearestDistance km, Nearest Point: $nearestPoint');
       }
     }
-    print('Distances : $distances');
   }
 
   double haversineDistance(double lat1, double lon1, double lat2, double lon2) {

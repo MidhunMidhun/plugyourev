@@ -29,7 +29,25 @@ class _MyLoginState extends State<MyLogin> {
       final user = FirebaseAuth.instance.currentUser!;
       Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => MyStatefulWidget()));
-    } else {}
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Incorrect email or password. Please try again.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
     setState(() {
       _isLoading = false;
     });
