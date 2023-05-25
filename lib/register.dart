@@ -32,6 +32,24 @@ class _MyRegisterState extends State<MyRegister> {
           .createUserWithEmailAndPassword(
               email: _emailcontroller.text.trim(),
               password: _passwordcontroller.text.trim());
+    } else {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Error'),
+            content: Text('Passwords do not match. Please try again.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
     }
   }
 
@@ -194,16 +212,35 @@ class _MyRegisterState extends State<MyRegister> {
                                 child: IconButton(
                                     color: Colors.white,
                                     onPressed: () {
-                                      AuthMethods().signupUser(
-                                        email: _emailcontroller.text.trim(),
-                                        password:
-                                            _passwordcontroller.text.trim(),
-                                        name: _namecontroller.text.trim(),
-                                      );
-
-                                      Navigator.of(context).pushReplacement(
-                                          MaterialPageRoute(
-                                              builder: (_) => MyLogin()));
+                                      if (passwordcheck()) {
+                                        AuthMethods().signupUser(
+                                          email: _emailcontroller.text.trim(),
+                                          password:
+                                              _passwordcontroller.text.trim(),
+                                          name: _namecontroller.text.trim(),
+                                        );
+                                        Navigator.pushNamed(
+                                            context, 'login_page');
+                                      } else {
+                                        showDialog(
+                                          context: context,
+                                          builder: (BuildContext context) {
+                                            return AlertDialog(
+                                              title: Text('Error'),
+                                              content: Text(
+                                                  'Passwords do not match. Please try again.'),
+                                              actions: [
+                                                TextButton(
+                                                  onPressed: () {
+                                                    Navigator.of(context).pop();
+                                                  },
+                                                  child: Text('OK'),
+                                                ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
                                     },
                                     icon: Icon(
                                       Icons.arrow_forward,

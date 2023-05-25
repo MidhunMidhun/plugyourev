@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:plugyourev/bottom_navbar.dart';
 import 'package:plugyourev/maparea.dart';
+import 'package:plugyourev/adminpanel.dart';
 
 import 'auth.dart';
 
@@ -22,31 +23,38 @@ class _MyLoginState extends State<MyLogin> {
     setState(() {
       _isLoading = true;
     });
-
-    String res = await AuthMethods()
-        .loginUser(email: email.text, password: password.text);
-    if (res == 'success') {
-      final user = FirebaseAuth.instance.currentUser!;
-      Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => MyStatefulWidget()));
+    String enteredEmail = email.text.trim();
+    String enteredPassword = password.text.trim();
+    if (enteredEmail == 'admin' && enteredPassword == 'admin') {
+      // Redirect to the admin panel page
+      Navigator.of(context)
+          .pushReplacement(MaterialPageRoute(builder: (_) => adminpanel()));
     } else {
-      showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text('Error'),
-            content: Text('Incorrect email or password. Please try again.'),
-            actions: [
-              TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text('OK'),
-              ),
-            ],
-          );
-        },
-      );
+      String res = await AuthMethods()
+          .loginUser(email: email.text, password: password.text);
+      if (res == 'success') {
+        final user = FirebaseAuth.instance.currentUser!;
+        Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => MyStatefulWidget()));
+      } else {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Error'),
+              content: Text('Incorrect email or password. Please try again.'),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text('OK'),
+                ),
+              ],
+            );
+          },
+        );
+      }
     }
     setState(() {
       _isLoading = false;
